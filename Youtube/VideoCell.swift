@@ -29,9 +29,9 @@ class VideoCell: BaseCell {
         didSet{
             titleLabel.text = video?.title
             
-            if let imageVideoThumbnailName = video?.thumbnail{
-                thubnailImageView.image = UIImage(named: imageVideoThumbnailName)
-            }
+            setupThumbnailImageView()
+            
+            setupProfileImageView()
 
             if let profileImageName = video?.channel?.profimeImageName {
                 profileImageView.image = UIImage(named: profileImageName)
@@ -62,6 +62,21 @@ class VideoCell: BaseCell {
         }
     }
     
+    func setupThumbnailImageView(){
+        if let thumbnailImageUrl = video?.thumbnail{
+            thubnailImageView.loadImageUsingUrl(urlString: thumbnailImageUrl)
+        }
+    }
+    
+    func setupProfileImageView(){
+        if let profileImageUrl = video?.channel?.profimeImageName{
+            
+            profileImageView.loadImageUsingUrl(urlString: profileImageUrl)
+        
+        }
+        
+    }
+    
     let thubnailImageView : UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage.init(named: "thumbnail_youtube1")
@@ -75,6 +90,7 @@ class VideoCell: BaseCell {
         imageView.image = UIImage.init(named: "avatar")
         imageView.layer.cornerRadius = 22
         imageView.layer.masksToBounds = true
+        imageView.contentMode = .scaleAspectFill
         return imageView
     }()
     

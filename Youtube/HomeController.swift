@@ -10,32 +10,78 @@ import UIKit
 
 class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLayout{
 
-    var videos: [Video] = {
-        var bielaChannel = Channel()
-        bielaChannel.name = "Biela torta"
-        bielaChannel.profimeImageName = "biela_torta_avatar"
+//    var videos: [Video] = {
+//        var bielaChannel = Channel()
+//        bielaChannel.name = "Biela torta"
+//        bielaChannel.profimeImageName = "biela_torta_avatar"
+//        
+//        var tobiasKemerichChannel = Channel()
+//        tobiasKemerichChannel.name = "Tobias Kemerich"
+//        tobiasKemerichChannel.profimeImageName = "tobias_avatar"
+//        
+//        var bielatortaVideo = Video()
+//        bielatortaVideo.title = "Motivos para ter uma BMW 1000RR"
+//        bielatortaVideo.thumbnail = "thumbnail_youtube1"
+//        bielatortaVideo.channel = bielaChannel
+//        bielatortaVideo.numberOfViews = 234234
+//        
+//        var guitarraHumanaVideo = Video()
+//        guitarraHumanaVideo.title = "Guitarra Humana | Guitar Flash Custom. S I N C R O N I A"
+//        guitarraHumanaVideo.thumbnail = "guitarra_humana"
+//        guitarraHumanaVideo.channel = tobiasKemerichChannel
+//        guitarraHumanaVideo.numberOfViews = 325243
+//        
+//        return [bielatortaVideo,guitarraHumanaVideo,bielatortaVideo]
+//    }()
+
+    var videos: [Video]?
+    
+    func fetchVideos(){
+        let urlExample = URL(string: "https://s3-us-west-2.amazonaws.com/youtubeassets/home.json")
         
-        var tobiasKemerichChannel = Channel()
-        tobiasKemerichChannel.name = "Tobias Kemerich"
-        tobiasKemerichChannel.profimeImageName = "tobias_avatar"
+        URLSession.shared.dataTask(with: urlExample!) { (data, response, error) in
+            
+            if error != nil {
+                print(error!)
+                return
+            }
+            
+            do {
+                let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers)
+                
+                self.videos = [Video]()
+                
+                for dictionary in json as! [[String: AnyObject]]{
+                    
+                    let video = Video()
+                    video.title = (dictionary["title"]! as! String)
+                    video.thumbnail = (dictionary["thumbnail_image_name"]! as! String)
+                    
+                    let channelDictionary = (dictionary["channel"]! as! [String: AnyObject])
+                    
+                    let channel = Channel()
+                    channel.name = (channelDictionary["name"]! as! String)
+                    channel.profimeImageName = (channelDictionary["profile_image_name"]! as! String)
+                    
+                    video.channel = channel
+                    self.videos?.append(video)
+                    
+                }
+                self.collectionView?.reloadData()
+            
+            }catch let jsonError{
+                print(jsonError)
+            }
+            
+        }.resume()
+            
         
-        var bielatortaVideo = Video()
-        bielatortaVideo.title = "Motivos para ter uma BMW 1000RR"
-        bielatortaVideo.thumbnail = "thumbnail_youtube1"
-        bielatortaVideo.channel = bielaChannel
-        bielatortaVideo.numberOfViews = 234234
-        
-        var guitarraHumanaVideo = Video()
-        guitarraHumanaVideo.title = "Guitarra Humana | Guitar Flash Custom. S I N C R O N I A"
-        guitarraHumanaVideo.thumbnail = "guitarra_humana"
-        guitarraHumanaVideo.channel = tobiasKemerichChannel
-        guitarraHumanaVideo.numberOfViews = 325243
-        
-        return [bielatortaVideo,guitarraHumanaVideo,bielatortaVideo]
-    }()
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        fetchVideos()
         
         navigationController?.navigationBar.isTranslucent = false
     
@@ -85,13 +131,15 @@ class HomeController: UICollectionViewController, UICollectionViewDelegateFlowLa
     }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return videos.count
+
+        return videos?.count ?? 0
     }
     
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! VideoCell
         
-        cell.video = videos[indexPath.item]
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cellId", for: indexPath) as! VideoCell
+
+        cell.video = videos?[indexPath.item]
         
         return cell;
     }
