@@ -8,12 +8,58 @@
 
 import UIKit
 
-class VideoCell: UICollectionViewCell {
-    
-    override
-    init(frame: CGRect) {
+class BaseCell: UICollectionViewCell{
+    override init(frame: CGRect) {
         super.init(frame: frame)
         setupViews()
+    }
+    
+    func setupViews(){
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+}
+
+class VideoCell: BaseCell {
+    
+    var video: Video? {
+        didSet{
+            titleLabel.text = video?.title
+            
+            if let imageVideoThumbnailName = video?.thumbnail{
+                thubnailImageView.image = UIImage(named: imageVideoThumbnailName)
+            }
+
+            if let profileImageName = video?.channel?.profimeImageName {
+                profileImageView.image = UIImage(named: profileImageName)
+            }
+            
+            if let channelName = video?.channel?.name, let numberOfViews = video?.numberOfViews{
+                let numberFormater = NumberFormatter()
+                numberFormater.numberStyle = .decimal
+                
+                subTitleTextView.text = "\(channelName) • \(String(describing: numberFormater.string(from: numberOfViews)!)) visualizações • 9 Meses atrás"
+            }
+            
+            //measure title text
+            if let title = video?.title{
+                let size = CGSize(width: frame.width - 16 - 44 - 8 - 16, height: 1000)
+                let options = NSStringDrawingOptions.usesFontLeading.union(.usesLineFragmentOrigin)
+                
+                let estimetedRect = NSString(string: title).boundingRect(with: size, options: options, attributes: [NSFontAttributeName: UIFont.systemFont(ofSize: 14)], context: nil)
+                
+                if estimetedRect.size.height > 20{
+                    titleHighLabelConstraint?.constant = 44
+                }else{
+                    titleHighLabelConstraint?.constant = 20
+                }
+                
+            }
+            
+        }
     }
     
     let thubnailImageView : UIImageView = {
@@ -36,6 +82,7 @@ class VideoCell: UICollectionViewCell {
         var label = UILabel()
         label.translatesAutoresizingMaskIntoConstraints = false
         label.text = "Motivos para ter uma BMW S1000RR"
+        label.numberOfLines = 2
         return label
     }()
     
@@ -54,7 +101,9 @@ class VideoCell: UICollectionViewCell {
         return view
     }()
     
-    func setupViews(){
+    var titleHighLabelConstraint: NSLayoutConstraint?
+    
+    override func setupViews(){
         addSubview(thubnailImageView)
         addSubview(separatorView)
         addSubview(profileImageView)
@@ -67,7 +116,7 @@ class VideoCell: UICollectionViewCell {
         addConstraintWithFormat(format: "H:|[v0]|",views: separatorView)
         
         //Vertical Constraints
-        addConstraintWithFormat(format: "V:|-16-[v0]-8-[v1(44)]-16-[v2(1)]|",views: thubnailImageView,profileImageView,separatorView)
+        addConstraintWithFormat(format: "V:|-16-[v0]-8-[v1(44)]-36-[v2(1)]|",views: thubnailImageView,profileImageView,separatorView)
         
         //Top Constraint
         addConstraint(NSLayoutConstraint(item: titleLabel, attribute: .top, relatedBy: .equal, toItem: thubnailImageView, attribute: .bottom, multiplier: 1, constant: 8))
@@ -76,7 +125,9 @@ class VideoCell: UICollectionViewCell {
         //Right Constraint
         addConstraint(NSLayoutConstraint(item: titleLabel, attribute: .right, relatedBy: .equal, toItem: thubnailImageView, attribute: .right, multiplier: 1, constant: 0))
         //height Constraint
-        addConstraint(NSLayoutConstraint(item: titleLabel, attribute: .height, relatedBy: .equal, toItem: self, attribute: .height, multiplier: 0, constant: 20))
+        titleHighLabelConstraint = NSLayoutConstraint(item: titleLabel, attribute: .height, relatedBy: .equal, toItem: self, attribute: .height, multiplier: 0, constant: 44)
+        
+        addConstraint(titleHighLabelConstraint!)
         
         //Top Constraint
         addConstraint(NSLayoutConstraint(item: subTitleTextView, attribute: .top, relatedBy: .equal, toItem: titleLabel, attribute: .bottom, multiplier: 1, constant: 4))
@@ -87,10 +138,6 @@ class VideoCell: UICollectionViewCell {
         //height Constraint
         addConstraint(NSLayoutConstraint(item: subTitleTextView, attribute: .height, relatedBy: .equal, toItem: self, attribute: .height, multiplier: 0, constant: 30))
         
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
     
 }
